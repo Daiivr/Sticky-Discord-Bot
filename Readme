@@ -1,0 +1,15 @@
+A Discord sticky bot is a type of bot that allows you to "stick" messages to a channel, making them stay at the top or bottom of the channel regardless of new messages being sent. This can be useful for important announcements, rules, or ongoing discussions that you want to ensure everyone sees.
+
+The functionality of a Discord sticky bot typically includes:
+
+1. **Sticking Messages:** Users with the appropriate permissions can use a command to stick a message to the channel.
+
+2. **Unsticking Messages:** Similarly, there's usually a command to remove a sticky message from the channel.
+
+3. **Customization:** Sticky bots often allow customization of the sticky message's content, such as text, embeds, colors, and images.
+
+4. **Role Permissions:** Sticky bots often have role-based permissions, ensuring that only certain roles or users can stick or unstick messages.
+
+5. **Database Integration:** They typically integrate with a database to store information about the sticky messages, such as their content, channel ID, and customization settings.
+
+Overall, a Discord sticky bot can help in managing important information in a Discord server, keeping it visible and easily accessible to all members.
