@@ -13,3 +13,5 @@ The functionality of a Discord sticky bot typically includes:
 5. **Database Integration:** They typically integrate with a database to store information about the sticky messages, such as their content, channel ID, and customization settings.
 
 Overall, a Discord sticky bot can help in managing important information in a Discord server, keeping it visible and easily accessible to all members.
+
+Use Discord.JS Version 13
