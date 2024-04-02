@@ -1,13 +1,18 @@
 const { Client, Intents, MessageEmbed } = require("discord.js");
 const { createPool } = require('mysql2/promise');
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
+const client = new Client({
+	intents: [
+		Intents.FLAGS.GUILDS,
+		Intents.FLAGS.GUILD_MESSAGES,
+	],
+});
 
 const db = createPool({
-  host: '',
-  user: '',
-  password: '',
-  database: '',
+  host: 'Host URL',
+  user: 'Username',
+  password: 'Password',
+  database: 'Database',
 });
 
 const PREFIX = '!'; // Set your desired prefix here
@@ -15,7 +20,7 @@ const PREFIX = '!'; // Set your desired prefix here
 let lastStickyMessageSent = new Map();
 let lastStickyMessageID = new Map();
 
-const allowedRoles = ['1095061892931797084', '1171580814656557137']; // Add your second role ID here
+const allowedRoles = ['Add Role ID', 'Add Role ID 2']; // Add your second role ID here
 
 client.once('ready', () => {
   console.log('BOT ONLINE!');
@@ -42,7 +47,8 @@ client.on('messageCreate', async (message) => {
             { name: '!stick <message>', value: 'Stick a message to the channel.' },
             { name: '!unstick', value: 'Unstick the current sticky message.' }
           )
-          .setFooter('© 2022 - 2024 PokémonLegends', 'https://i.imgur.com/NyAz7sw.png');
+          .setFooter({ text: '© 2022 - 2024 PokémonLegends', iconURL: 'https://i.imgur.com/NyAz7sw.png' });
+
 
         message.channel.send({ embeds: [embed] });
       } else if (command === 'setcolor') {
@@ -86,14 +92,15 @@ async function fetchStickyMessage(channelID, channel) {
         .setTitle(embedTitle)
         .setDescription(stickyContent)
         .setThumbnail(embedImage)
-        .setFooter('© 2022 - 2024 PokémonLegends', 'https://i.imgur.com/NyAz7sw.png');
+        .setFooter({ text: '© 2022 - 2024 PokémonLegends', iconURL: 'https://i.imgur.com/NyAz7sw.png' });
+
 
       // Check if there's a previous sticky message ID in the map
       if (lastStickyMessageID.has(channelID)) {
         const previousStickyMessageID = lastStickyMessageID.get(channelID);
-        const previousStickyMessage = await channel.messages.fetch(previousStickyMessageID);
-        if (previousStickyMessage && previousStickyMessage.author.bot) {
-          await previousStickyMessage.delete(); // Delete the previous bot sticky message
+        const previousStickyMessage = await channel.messages.fetch({ around: previousStickyMessageID, limit: 1 });
+        if (previousStickyMessage && previousStickyMessage.first().author.bot) {
+          await previousStickyMessage.first().delete(); // Delete the previous bot sticky message
         }
       }
 
@@ -187,11 +194,11 @@ async function removeStickyMessage(channelID, channel) {
   // Check if there's a previous sticky message ID in the map and delete the message from Discord
   if (lastStickyMessageID.has(channelID)) {
     const previousStickyMessageID = lastStickyMessageID.get(channelID);
-    const previousStickyMessage = await channel.messages.fetch(previousStickyMessageID);
-    if (previousStickyMessage && previousStickyMessage.author.bot) {
-      await previousStickyMessage.delete(); // Delete the previous bot sticky message
+    const previousStickyMessage = await channel.messages.fetch({ around: previousStickyMessageID, limit: 1 });
+    if (previousStickyMessage && previousStickyMessage.first().author.bot) {
+      await previousStickyMessage.first().delete(); // Delete the previous bot sticky message
     }
   }
 }
 
-client.login('');
+client.login('Token Here');
