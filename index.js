@@ -9,10 +9,10 @@ const client = new Client({
 });
 
 const db = createPool({
-    host: 'Host',
-    user: 'Username',
-    password: 'Password',
-    database: 'Database',
+    host: 'Database Host',
+    user: 'Database Username',
+    password: 'Database Password',
+    database: 'Database Name',
 });
 
 const PREFIX = '!'; // Set your desired prefix here
@@ -22,19 +22,31 @@ let lastStickyMessageID = new Map();
 
 const allowedRoles = ['Role ID', 'Role ID 2', 'Role ID 3']; // Add your second role ID here
 
+const embedFooter = {
+    text: '© 2022 - 2024 PokémonLegends',
+    iconURL: 'https://i.imgur.com/NyAz7sw.png'
+};
+
 client.once('ready', () => {
     console.log('BOT ONLINE!');
     console.log('CODED BY DEVRY!');
 });
 
 client.on('messageCreate', async (message) => {
-    try {
-        if (message.author.bot) return; // Ignore messages from bots
+   try {
+        const channelID = message.channel.id;
+
+        // Check if the sticky message needs to be reposted after 5 seconds
+        if (!lastStickyMessageSent.has(channelID) || Date.now() - lastStickyMessageSent.get(channelID) > 5000) {
+            fetchStickyMessage(channelID, message.channel);
+            lastStickyMessageSent.set(channelID, Date.now());
+        }
 
         if (message.content.startsWith(PREFIX)) {
             const args = message.content.slice(PREFIX.length).trim().split(/ +/);
             const command = args.shift().toLowerCase();
 
+            
             if (command === 'help') {
                 const embed = new MessageEmbed()
                     .setColor('#0099ff')
@@ -47,8 +59,7 @@ client.on('messageCreate', async (message) => {
                         { name: '!stick <message>', value: 'Stick a message to the channel.' },
                         { name: '!unstick', value: 'Unstick the current sticky message.' }
                     )
-                    .setFooter({ text: '© 2022 - 2024 PokémonLegends', iconURL: 'https://i.imgur.com/NyAz7sw.png' });
-
+                    .setFooter(embedFooter);
 
                 message.delete(); // Delete the command message after processing
                 deleteLastUserMessage(message); // Delete the last user message
@@ -56,23 +67,23 @@ client.on('messageCreate', async (message) => {
                 message.channel.send({ embeds: [embed] });
             } else if (command === 'setcolor') {
                 handleSetColorCommand(message, args);
-				message.delete(); // Delete the command message after processing
+                 message.delete(); // Delete the command message after processing
                 deleteLastUserMessage(message); // Delete the last user message
             } else if (command === 'setimage') {
                 handleSetImageCommand(message, args);
-				message.delete(); // Delete the command message after processing
+                 message.delete(); // Delete the command message after processing
                 deleteLastUserMessage(message); // Delete the last user message
             } else if (command === 'settitle') {
                 handleSetTitleCommand(message, args);
-				message.delete(); // Delete the command message after processing
+                 message.delete(); // Delete the command message after processing
                 deleteLastUserMessage(message); // Delete the last user message
             } else if (command === 'stick') {
                 handleStickCommand(message, args);
-				message.delete(); // Delete the command message after processing
+                 message.delete(); // Delete the command message after processing
                 deleteLastUserMessage(message); // Delete the last user message
             } else if (command === 'unstick') {
                 handleUnstickCommand(message);
-				message.delete(); // Delete the command message after processing
+                 message.delete(); // Delete the command message after processing
                 deleteLastUserMessage(message); // Delete the last user message
             }
         } else {
@@ -89,16 +100,16 @@ client.on('messageCreate', async (message) => {
     }
 });
 
-
 async function deleteLastUserMessage(message) {
     try {
         const messages = await message.channel.messages.fetch({ limit: 2 });
         const lastUserMessage = messages.filter(m => m.author.id === message.author.id && !m.author.bot).first();
-        if (lastUserMessage) {
+
+        if (lastUserMessage) { // Check if the message exists
             await lastUserMessage.delete();
         }
     } catch (error) {
-        console.error('Error deleting last user message:', error);
+        // Handle specific error code here if needed
     }
 }
 
@@ -118,7 +129,7 @@ async function fetchStickyMessage(channelID, channel) {
                 .setTitle(embedTitle)
                 .setDescription(stickyContent)
                 .setThumbnail(embedImage)
-                .setFooter({ text: '© 2022 - 2024 PokémonLegends', iconURL: 'https://i.imgur.com/NyAz7sw.png' });
+                .setFooter(embedFooter);
 
             // Check if there's a previous sticky message ID in the map
             if (lastStickyMessageID.has(channelID)) {
