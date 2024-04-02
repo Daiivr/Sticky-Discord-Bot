@@ -50,17 +50,30 @@ client.on('messageCreate', async (message) => {
                     .setFooter({ text: '© 2022 - 2024 PokémonLegends', iconURL: 'https://i.imgur.com/NyAz7sw.png' });
 
 
+                message.delete(); // Delete the command message after processing
+                deleteLastUserMessage(message); // Delete the last user message
+
                 message.channel.send({ embeds: [embed] });
             } else if (command === 'setcolor') {
                 handleSetColorCommand(message, args);
+				message.delete(); // Delete the command message after processing
+                deleteLastUserMessage(message); // Delete the last user message
             } else if (command === 'setimage') {
                 handleSetImageCommand(message, args);
+				message.delete(); // Delete the command message after processing
+                deleteLastUserMessage(message); // Delete the last user message
             } else if (command === 'settitle') {
                 handleSetTitleCommand(message, args);
+				message.delete(); // Delete the command message after processing
+                deleteLastUserMessage(message); // Delete the last user message
             } else if (command === 'stick') {
                 handleStickCommand(message, args);
+				message.delete(); // Delete the command message after processing
+                deleteLastUserMessage(message); // Delete the last user message
             } else if (command === 'unstick') {
                 handleUnstickCommand(message);
+				message.delete(); // Delete the command message after processing
+                deleteLastUserMessage(message); // Delete the last user message
             }
         } else {
             const channelID = message.channel.id;
@@ -75,6 +88,19 @@ client.on('messageCreate', async (message) => {
         console.error('Error executing command:', error);
     }
 });
+
+
+async function deleteLastUserMessage(message) {
+    try {
+        const messages = await message.channel.messages.fetch({ limit: 2 });
+        const lastUserMessage = messages.filter(m => m.author.id === message.author.id && !m.author.bot).first();
+        if (lastUserMessage) {
+            await lastUserMessage.delete();
+        }
+    } catch (error) {
+        console.error('Error deleting last user message:', error);
+    }
+}
 
 async function fetchStickyMessage(channelID, channel) {
     try {
