@@ -23,7 +23,7 @@ let lastStickyMessageID = new Map();
 const allowedRoles = ['Role ID', 'Role ID 2', 'Role ID 3']; // Add your second role ID here
 
 const embedFooter = {
-    text: '© 2022 - 2024 PokémonLegends',
+    text: '© 2022 - 2024 Pokémon Legends',
     iconURL: 'https://i.imgur.com/NyAz7sw.png'
 };
 
