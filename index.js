@@ -9,10 +9,10 @@ const client = new Client({
 });
 
 const db = createPool({
-    host: 'Database Host',
-    user: 'Database Username',
-    password: 'Database Password',
-    database: 'Database Name',
+    host: 'na05-sql.pebblehost.com',
+    user: 'customer_623285_pokemonlegends',
+    password: 'Z#ZZ#0T8KizqAMEWrnzb',
+    database: 'customer_623285_pokemonlegends',
 });
 
 const PREFIX = '!'; // Set your desired prefix here
@@ -20,7 +20,7 @@ const PREFIX = '!'; // Set your desired prefix here
 let lastStickyMessageSent = new Map();
 let lastStickyMessageID = new Map();
 
-const allowedRoles = ['Role ID', 'Role ID 2', 'Role ID 3']; // Add your second role ID here
+const allowedRoles = ['1095061892931797084', '1171580814656557137', 'Role ID 3']; // Add your second role ID here
 
 const embedFooter = {
     text: '© 2022 - 2024 Pokémon Legends',
@@ -28,8 +28,10 @@ const embedFooter = {
 };
 
 client.once('ready', () => {
-    console.log('BOT ONLINE!');
-    console.log('CODED BY DEVRY!');
+    console.log(`Sticky Bot Version 1.0`);
+    console.log(`MYSQL DATABASE CONNECTED!`);
+    console.log(`Logged in as ${client.user.tag}!`);
+    console.log(`CODED BY DEVRY`)
 });
 
 client.on('messageCreate', async (message) => {
@@ -50,7 +52,7 @@ client.on('messageCreate', async (message) => {
             if (command === 'help') {
                 const embed = new MessageEmbed()
                     .setColor('#0099ff')
-                    .setTitle('Command Help')
+                    .setTitle('Sticky Bot Commands')
                     .setDescription('Here are the available commands:')
                     .addFields(
                         { name: '!setcolor <color>', value: 'Set the embed color for sticky messages.' },
@@ -62,29 +64,23 @@ client.on('messageCreate', async (message) => {
                     .setFooter(embedFooter);
 
                 message.delete(); // Delete the command message after processing
-                deleteLastUserMessage(message); // Delete the last user message
 
                 message.channel.send({ embeds: [embed] });
             } else if (command === 'setcolor') {
                 handleSetColorCommand(message, args);
                  message.delete(); // Delete the command message after processing
-                deleteLastUserMessage(message); // Delete the last user message
             } else if (command === 'setimage') {
                 handleSetImageCommand(message, args);
                  message.delete(); // Delete the command message after processing
-                deleteLastUserMessage(message); // Delete the last user message
             } else if (command === 'settitle') {
                 handleSetTitleCommand(message, args);
                  message.delete(); // Delete the command message after processing
-                deleteLastUserMessage(message); // Delete the last user message
             } else if (command === 'stick') {
                 handleStickCommand(message, args);
                  message.delete(); // Delete the command message after processing
-                deleteLastUserMessage(message); // Delete the last user message
             } else if (command === 'unstick') {
                 handleUnstickCommand(message);
                  message.delete(); // Delete the command message after processing
-                deleteLastUserMessage(message); // Delete the last user message
             }
         } else {
             const channelID = message.channel.id;
@@ -99,19 +95,6 @@ client.on('messageCreate', async (message) => {
         console.error('Error executing command:', error);
     }
 });
-
-async function deleteLastUserMessage(message) {
-    try {
-        const messages = await message.channel.messages.fetch({ limit: 2 });
-        const lastUserMessage = messages.filter(m => m.author.id === message.author.id && !m.author.bot).first();
-
-        if (lastUserMessage) { // Check if the message exists
-            await lastUserMessage.delete();
-        }
-    } catch (error) {
-        // Handle specific error code here if needed
-    }
-}
 
 async function fetchStickyMessage(channelID, channel) {
     try {
@@ -218,4 +201,4 @@ async function handleUnstickCommand(message) {
     message.channel.send('Sticky message removed successfully!');
 }
 
-client.login('Token Here');
+client.login('Discord Bot Token');
