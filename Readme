@@ -1,17 +1,106 @@
-A Discord sticky bot is a type of bot that allows you to "stick" messages to a channel, making them stay at the top or bottom of the channel regardless of new messages being sent. This can be useful for important announcements, rules, or ongoing discussions that you want to ensure everyone sees.
+Sure! Here’s a `README.md` file for your project:
 
-The functionality of a Discord sticky bot typically includes:
+```markdown
+# Pokémon Legends Sticky Bot
 
-1. **Sticking Messages:** Users with the appropriate permissions can use a command to stick a message to the channel.
+A Discord bot for Pokémon Legends that allows for sticky messages in Discord channels. This bot ensures that important messages stay visible by periodically reposting them.
 
-2. **Unsticking Messages:** Similarly, there's usually a command to remove a sticky message from the channel.
+## Features
 
-3. **Customization:** Sticky bots often allow customization of the sticky message's content, such as text, embeds, colors, and images.
+- Sticky messages that stay at the bottom of the channel.
+- Commands to set the color, image, title, and content of sticky messages.
+- Permissions-based command access.
+- Auto-deletion of command messages to keep the chat clean.
+- Persistent storage of the last sticky message ID to ensure proper cleanup on bot restart.
 
-4. **Role Permissions:** Sticky bots often have role-based permissions, ensuring that only certain roles or users can stick or unstick messages.
+## Setup
 
-5. **Database Integration:** They typically integrate with a database to store information about the sticky messages, such as their content, channel ID, and customization settings.
+### Prerequisites
 
-Overall, a Discord sticky bot can help in managing important information in a Discord server, keeping it visible and easily accessible to all members.
+- Node.js (v16.6.0 or higher)
+- npm (v7.20.0 or higher)
+- MySQL database
 
-Use Discord.JS Version 13
+### Installation
+
+1. Clone the repository:
+
+    ```bash
+    git clone https://github.com/yourusername/pokemon-legends-sticky-bot.git
+    cd pokemon-legends-sticky-bot
+    ```
+
+2. Install the dependencies:
+
+    ```bash
+    npm install
+    ```
+
+3. Create a `.env` file in the root directory and add your Discord bot token:
+
+    ```env
+    DISCORD_TOKEN=your-discord-bot-token
+    ```
+
+4. Create a `LastPost.json` file in the root directory:
+
+    ```json
+    {}
+    ```
+
+5. Update the MySQL database connection details in the `index.js` file:
+
+    ```javascript
+    const db = createPool({
+        host: 'your-database-host',
+        user: 'your-database-user',
+        password: 'your-database-password',
+        database: 'your-database-name',
+    });
+    ```
+
+### Running the Bot
+
+Start the bot using the following command:
+
+```bash
+node index.js
+```
+
+## Commands
+
+- `!help` - Display the available commands.
+- `!setcolor <color>` - Set the embed color for sticky messages.
+- `!setimage <imageURL>` - Set the embed image for sticky messages.
+- `!settitle <title>` - Set the title for sticky messages.
+- `!stick <message>` - Stick a message to the channel.
+- `!unstick` - Unstick the current sticky message.
+
+### Permissions
+
+Commands are restricted to users with specific roles. Update the `allowedRoles` array in `index.js` with the role IDs that are allowed to use the commands:
+
+```javascript
+const allowedRoles = ['role-id-1', 'role-id-2', 'role-id-3'];
+```
+
+## Contributing
+
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature-branch`).
+3. Make your changes.
+4. Commit your changes (`git commit -am 'Add new feature'`).
+5. Push to the branch (`git push origin feature-branch`).
+6. Create a new Pull Request.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+For any questions or suggestions, please open an issue or contact us at [your-email@example.com].
+
+```
+
+Feel free to adjust the instructions and details according to your specific setup and preferences.
