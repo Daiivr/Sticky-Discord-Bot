@@ -94,10 +94,4 @@ const allowedRoles = ['role-id-1', 'role-id-2', 'role-id-3'];
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## Contact
-
-For any questions or suggestions, please open an issue or contact us at [your-email@example.com].
-
-```
-
-Feel free to adjust the instructions and details according to your specific setup and preferences.
+Make sure to replace placeholders such as `yourusername`, `your-discord-bot-token`, `your-database-host`, `your-database-user`, `your-database-password`, `your-database-name`, and `your-email@example.com` with your actual information.
