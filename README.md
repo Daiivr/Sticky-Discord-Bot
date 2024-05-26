@@ -33,15 +33,7 @@ A highly customizable Discord bot designed for the Pokémon Legends community. T
     npm install
     ```
 
-3. **Configure Environment Variables:**
-
-    Create a `.env` file in the root directory and add your Discord bot token:
-
-    ```env
-    DISCORD_TOKEN=your-discord-bot-token
-    ```
-
-4. **Setup MySQL Database:**
+3. **Setup MySQL Database:**
 
     Update the MySQL database connection details in the `index.js` file:
 
@@ -54,7 +46,7 @@ A highly customizable Discord bot designed for the Pokémon Legends community. T
     });
     ```
 
-5. **Create `LastPost.json`:**
+4. **Create `LastPost.json`:**
 
     Create a `LastPost.json` file in the root directory:
 
