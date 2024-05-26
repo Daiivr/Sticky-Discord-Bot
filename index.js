@@ -1,5 +1,7 @@
 const { Client, Intents, MessageEmbed } = require("discord.js");
 const { createPool } = require('mysql2/promise');
+const fs = require('fs');
+const path = require('path');
 
 const client = new Client({
     intents: [
@@ -9,16 +11,29 @@ const client = new Client({
 });
 
 const db = createPool({
-    host: 'Host',
-    user: 'User',
-    password: 'Password',
-    database: 'Database',
+    host: 'na05-sql.pebblehost.com',
+    user: 'customer_623285_pokemonlegends',
+    password: 'Z#ZZ#0T8KizqAMEWrnzb',
+    database: 'customer_623285_pokemonlegends',
 });
 
 const PREFIX = '!'; // Set your desired prefix here
 
 let lastStickyMessageSent = new Map();
 let lastStickyMessageID = new Map();
+
+// Load last sticky message IDs from LastPost.json
+const lastPostFilePath = path.resolve(__dirname, 'LastPost.json');
+if (fs.existsSync(lastPostFilePath)) {
+    try {
+        const lastPostData = JSON.parse(fs.readFileSync(lastPostFilePath, 'utf-8'));
+        for (const [channelID, messageID] of Object.entries(lastPostData)) {
+            lastStickyMessageID.set(channelID, messageID);
+        }
+    } catch (error) {
+        console.error('Error reading LastPost.json:', error);
+    }
+}
 
 const allowedRoles = ['1095061892931797084', '1171580814656557137', 'Role ID 3']; // Add your second role ID here
 
@@ -28,10 +43,8 @@ const embedFooter = {
 };
 
 client.once('ready', () => {
-    console.log(`Sticky Bot Version 1.0`);
-    console.log(`MYSQL DATABASE CONNECTED!`);
+    console.log(`MySQL Database Connected!`);
     console.log(`Logged in as ${client.user.tag}!`);
-    console.log(`CODED BY DEVRY`)
 });
 
 client.on('messageCreate', async (message) => {
@@ -126,10 +139,24 @@ async function fetchStickyMessage(channelID, channel) {
             // Post the new sticky message as an embed
             const newStickyMessage = await channel.send({ embeds: [embed] });
             lastStickyMessageID.set(channelID, newStickyMessage.id); // Update the map with the new sticky message ID
+
+            // Save the new sticky message ID to LastPost.json
+            saveLastStickyMessageID(channelID, newStickyMessage.id);
         }
     } catch (error) {
         console.error('Error fetching sticky message:', error);
     }
+}
+
+function saveLastStickyMessageID(channelID, messageID) {
+    let lastPostData = {};
+    try {
+        lastPostData = JSON.parse(fs.readFileSync(lastPostFilePath, 'utf-8'));
+    } catch (error) {
+        console.error('Error reading LastPost.json during save:', error);
+    }
+    lastPostData[channelID] = messageID;
+    fs.writeFileSync(lastPostFilePath, JSON.stringify(lastPostData, null, 2));
 }
 
 async function handleSetColorCommand(message, args) {
@@ -201,4 +228,4 @@ async function handleUnstickCommand(message) {
     message.channel.send('Sticky message removed successfully!');
 }
 
-client.login('Discord Bot Token');
+client.login('Bot Token');
