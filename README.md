@@ -1,4 +1,3 @@
-```markdown
 # Pokémon Legends Sticky Bot
 
 A highly customizable Discord bot designed for the Pokémon Legends community. This bot ensures important messages remain visible in your Discord channels by periodically reposting them as sticky messages.
