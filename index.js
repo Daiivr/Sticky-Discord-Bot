@@ -11,10 +11,10 @@ const client = new Client({
 });
 
 const db = createPool({
-    host: 'na05-sql.pebblehost.com',
-    user: 'customer_623285_pokemonlegends',
-    password: 'Z#ZZ#0T8KizqAMEWrnzb',
-    database: 'customer_623285_pokemonlegends',
+    host: 'Host',
+    user: 'User',
+    password: 'Pass',
+    database: 'DB',
 });
 
 const PREFIX = '!'; // Set your desired prefix here
