@@ -1,3 +1,6 @@
+Sure, here's a more polished and professional `README.md` file for your GitHub repository:
+
+```markdown
 # Pokémon Legends Sticky Bot
 
 A highly customizable Discord bot designed for the Pokémon Legends community. This bot ensures important messages remain visible in your Discord channels by periodically reposting them as sticky messages.
@@ -68,3 +71,49 @@ Start the bot using the following command:
 
 ```bash
 node index.js
+```
+
+## Commands
+
+- `!help` - Display the available commands.
+- `!setcolor <color>` - Set the embed color for sticky messages.
+- `!setimage <imageURL>` - Set the embed image for sticky messages.
+- `!settitle <title>` - Set the title for sticky messages.
+- `!stick <message>` - Stick a message to the channel.
+- `!unstick` - Unstick the current sticky message.
+
+### Permissions
+
+Commands are restricted to users with specific roles. Update the `allowedRoles` array in `index.js` with the role IDs that are allowed to use the commands:
+
+```javascript
+const allowedRoles = ['role-id-1', 'role-id-2', 'role-id-3'];
+```
+
+## Contributing
+
+We welcome contributions to enhance the Pokémon Legends Sticky Bot. To contribute:
+
+1. **Fork the repository.**
+2. **Create a new branch:** `git checkout -b feature-branch`.
+3. **Make your changes.**
+4. **Commit your changes:** `git commit -am 'Add new feature'`.
+5. **Push to the branch:** `git push origin feature-branch`.
+6. **Create a new Pull Request.**
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+For any questions or suggestions, please open an issue or contact us at [your-email@example.com].
+
+---
+
+<p align="center">
+  <img src="https://i.imgur.com/NyAz7sw.png" alt="Pokémon Legends" width="150"/>
+</p>
+```
+
+This README file provides a clear and professional overview of your project, including installation instructions, command descriptions, and contribution guidelines. Make sure to replace placeholders such as `yourusername`, `your-discord-bot-token`, `your-database-host`, `your-database-user`, `your-database-password`, `your-database-name`, and `your-email@example.com` with your actual information.
