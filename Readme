@@ -22,32 +22,32 @@ A Discord bot for Pokémon Legends that allows for sticky messages in Discord ch
 
 1. Clone the repository:
 
-    ```bash
+    ```
     git clone https://github.com/yourusername/pokemon-legends-sticky-bot.git
     cd pokemon-legends-sticky-bot
     ```
 
 2. Install the dependencies:
 
-    ```bash
+    ```
     npm install
     ```
 
 3. Create a `.env` file in the root directory and add your Discord bot token:
 
-    ```env
+    ```
     DISCORD_TOKEN=your-discord-bot-token
     ```
 
 4. Create a `LastPost.json` file in the root directory:
 
-    ```json
+    ```
     {}
     ```
 
 5. Update the MySQL database connection details in the `index.js` file:
 
-    ```javascript
+    ```
     const db = createPool({
         host: 'your-database-host',
         user: 'your-database-user',
@@ -60,7 +60,7 @@ A Discord bot for Pokémon Legends that allows for sticky messages in Discord ch
 
 Start the bot using the following command:
 
-```bash
+```
 node index.js
 ```
 
@@ -77,7 +77,7 @@ node index.js
 
 Commands are restricted to users with specific roles. Update the `allowedRoles` array in `index.js` with the role IDs that are allowed to use the commands:
 
-```javascript
+```
 const allowedRoles = ['role-id-1', 'role-id-2', 'role-id-3'];
 ```
 
