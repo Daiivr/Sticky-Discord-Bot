@@ -1,6 +1,5 @@
 require('dotenv').config();
 const { Client, Intents, MessageEmbed } = require('discord.js');
-const mysql = require('mysql2/promise');
 const fs = require('fs');
 const path = require('path');
 
@@ -8,235 +7,216 @@ const client = new Client({
     intents: [
         Intents.FLAGS.GUILDS,
         Intents.FLAGS.GUILD_MESSAGES,
-    ],
+        Intents.FLAGS.GUILD_MEMBERS
+    ]
 });
 
-const db = mysql.createPool({
-    uri: process.env.DB_URI,
-});
+const prefix = '$';
+const allowedRoleIds = [process.env.ALLOWED_ROLE_ID, process.env.ALLOWED_ROLE_ID2];
+const lockEmoji = '❌';
+const unlockEmoji = '✅';
+const managedRoleId = process.env.MANAGED_ROLE_ID;
+const pingRoleId = process.env.PING_ROLE_ID;
+const lockImageUrl = 'https://i.imgur.com/csmSEVh.png';
+const unlockImageUrl = 'https://i.imgur.com/m1RKJak.png';
+const footerIconUrl = 'https://i.imgur.com/r2Tc0xZ.png';
+const customImageUrl = 'https://i.imgur.com/WeMePud.jpg';
+const cooldownSeconds = 900;
 
-const PREFIX = '!'; // Set your desired prefix here
+const configPath = path.join(__dirname, 'config.json');
+let config;
 
-let lastStickyMessageSent = new Map();
-let lastStickyMessageID = new Map();
-
-// Load last sticky message IDs from LastPost.json
-const lastPostFilePath = path.resolve(__dirname, 'LastPost.json');
-if (fs.existsSync(lastPostFilePath)) {
-    try {
-        const lastPostData = JSON.parse(fs.readFileSync(lastPostFilePath, 'utf-8'));
-        for (const [channelID, messageID] of Object.entries(lastPostData)) {
-            lastStickyMessageID.set(channelID, messageID);
-        }
-    } catch (error) {
-        console.error('Error reading LastPost.json:', error);
-    }
+try {
+    config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+} catch (err) {
+    console.error('Failed to load config file:', err);
+    config = { lastCommands: {}, lastCodeEmbeds: {} };
 }
 
-const allowedRoles = ['1095061892931797084', '1171580814656557137', 'Role ID 3']; // Add your second role ID here
+// Ensure both lastCommands and lastCodeEmbeds are initialized
+config.lastCommands = config.lastCommands || {};
+config.lastCodeEmbeds = config.lastCodeEmbeds || {};
 
-const embedFooter = {
-    text: '© 2022 - 2024 Pokémon Legends',
-    iconURL: 'https://i.imgur.com/NyAz7sw.png'
+const saveConfig = () => {
+    try {
+        fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+    } catch (err) {
+        console.error('Failed to save config file:', err);
+    }
 };
 
-client.once('ready', () => {
-    console.log(`MySQL Database Connected!`);
+client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 });
 
-client.on('messageCreate', async (message) => {
-    try {
-        const channelID = message.channel.id;
+client.on('messageCreate', async message => {
+    if (!message.content.startsWith(prefix) || message.author.bot) return;
 
-        // Check if the sticky message needs to be reposted after 5 seconds
-        if (!lastStickyMessageSent.has(channelID) || Date.now() - lastStickyMessageSent.get(channelID) > 5000) {
-            fetchStickyMessage(channelID, message.channel);
-            lastStickyMessageSent.set(channelID, Date.now());
+    const args = message.content.slice(prefix.length).trim().split(/ +/);
+    const command = args.shift().toLowerCase();
+    const now = Date.now();
+    const serverId = message.guild.id;
+    const channelId = message.channel.id;
+
+    if (!config.lastCommands[serverId]) {
+        config.lastCommands[serverId] = {};
+    }
+    if (!config.lastCodeEmbeds[serverId]) {
+        config.lastCodeEmbeds[serverId] = {};
+    }
+
+    const lastCommand = config.lastCommands[serverId][channelId]?.command;
+    const lastTimestamp = config.lastCommands[serverId][channelId]?.timestamp || 0;
+    const remainingCooldown = lastTimestamp ? (lastTimestamp + cooldownSeconds * 1000 - now) : 0;
+    const isOppositeCommand = (command === 'offline' && lastCommand === 'online') || (command === 'online' && lastCommand === 'offline');
+
+    if (isOppositeCommand && remainingCooldown > 0) {
+        const cooldownEmbed = new MessageEmbed()
+            .setColor('#ff0000')
+            .setTitle('Cooldown')
+            .setDescription(`Please wait ${Math.ceil(remainingCooldown / 1000)} more seconds before using the \`${command}\` command again.`);
+        const sentMessage = await message.channel.send({ embeds: [cooldownEmbed] });
+        setTimeout(() => sentMessage.delete().catch(console.error), 5000);
+        message.delete().catch(console.error);
+        return;
+    }
+
+    const hasPermission = () => message.member.roles.cache.some(role => allowedRoleIds.includes(role.id));
+    const sendEmbed = async (color, title, description, imageUrl = null) => {
+        const embed = new MessageEmbed().setColor(color).setTitle(title).setDescription(description);
+        if (imageUrl) embed.setImage(imageUrl);
+        const sentMessage = await message.channel.send({ embeds: [embed] });
+        return sentMessage;
+    };
+
+    const handlePermissionDenied = async () => {
+        const sentMessage = await sendEmbed('#ff0000', 'Permission Denied', 'You do not have permission to use this command.');
+        setTimeout(() => sentMessage.delete().catch(console.error), 5000);
+        message.delete().catch(console.error);
+    };
+
+    const processOfflineCommand = async () => {
+        if (!hasPermission()) return handlePermissionDenied();
+
+        const channel = message.channel;
+        if (!channel.name.startsWith(lockEmoji)) {
+            await channel.setName(`${lockEmoji}${channel.name.replace(unlockEmoji, '')}`);
+            await channel.permissionOverwrites.edit(managedRoleId, { SEND_MESSAGES: false });
+            await sendEmbed('#ff0000', 'Union Circle Offline', `${message.author} is not hosting Union Circle`, lockImageUrl);
+            config.lastCommands[serverId][channelId] = { timestamp: now, command: 'offline' };
+            saveConfig();
+        } else {
+            const sentMessage = await sendEmbed('#ff0000', 'Union Circle Already Offline', 'Union Circle Hosting is already offline.');
+            setTimeout(() => sentMessage.delete().catch(console.error), 5000);
         }
 
-        if (message.content.startsWith(PREFIX)) {
-            const args = message.content.slice(PREFIX.length).trim().split(/ +/);
-            const command = args.shift().toLowerCase();
+        message.delete().catch(console.error);
+    };
 
-            switch (command) {
-                case 'help':
-                    sendHelpMessage(message);
-                    break;
-                case 'setcolor':
-                    handleSetColorCommand(message, args);
-                    break;
-                case 'setimage':
-                    handleSetImageCommand(message, args);
-                    break;
-                case 'settitle':
-                    handleSetTitleCommand(message, args);
-                    break;
-                case 'stick':
-                    handleStickCommand(message, args);
-                    break;
-                case 'unstick':
-                    handleUnstickCommand(message);
-                    break;
+    const processOnlineCommand = async () => {
+        if (!hasPermission()) return handlePermissionDenied();
+
+        const channel = message.channel;
+        if (channel.name.startsWith(lockEmoji)) {
+            await channel.setName(`${unlockEmoji}${channel.name.replace(lockEmoji, '')}`);
+            await channel.permissionOverwrites.edit(managedRoleId, { SEND_MESSAGES: null });
+            
+            // Send ping and delete it after 2 seconds
+            const roleMentionMessage = await message.channel.send(`<@&${pingRoleId}>`);
+            setTimeout(() => roleMentionMessage.delete().catch(console.error), 1000);
+            
+            await sendEmbed('#00ff00', 'Union Circle Online', `${message.author} is hosting Union Circle`, unlockImageUrl);
+            config.lastCommands[serverId][channelId] = { timestamp: now, command: 'online' };
+            saveConfig();
+        } else {
+            const sentMessage = await sendEmbed('#00ff00', 'Union Circle Already Online', 'This channel is already online.');
+            setTimeout(() => sentMessage.delete().catch(console.error), 5000);
+        }
+
+        message.delete().catch(console.error);
+    };
+
+    const processHelpCommand = async () => {
+        const helpEmbed = new MessageEmbed()
+            .setColor('#99AAb5')
+            .setTitle('Union Hosting Commands')
+            .setDescription('Here is a list of commands you can use:')
+            .addFields(
+                { name: '$offline', value: 'Lock the current channel. Only users with UC Host can use this command.' },
+                { name: '$online', value: 'Unlock the current channel. Only users with UC Host can use this command.' },
+                { name: '$code', value: 'Display the Union Circle code.' }
+            )
+            .setFooter({ text: '© 2022 - 2024 Pokémon Legends', iconURL: footerIconUrl });
+
+        const sentMessage = await message.channel.send({ embeds: [helpEmbed] });
+        setTimeout(() => sentMessage.delete().catch(console.error), 20000);
+        message.delete().catch(console.error);
+    };
+
+    const processCodeCommand = async () => {
+        if (!hasPermission()) return handlePermissionDenied();
+
+        const channel = message.channel;
+        if (!channel.name.startsWith(unlockEmoji)) {
+            const sentMessage = await sendEmbed('#ff0000', 'Union Circle Offline', 'Cannot display the code as the Union Circle is offline.');
+            setTimeout(() => sentMessage.delete().catch(console.error), 5000);
+            message.delete().catch(console.error);
+            return;
+        }
+
+        const code = args.join(' ');
+
+        if (!code) {
+            const errorEmbed = new MessageEmbed()
+                .setColor('#ff0000')
+                .setTitle('Error')
+                .setDescription('No code provided. Please provide a code to display.');
+            const sentMessage = await message.channel.send({ embeds: [errorEmbed] });
+            setTimeout(() => sentMessage.delete().catch(console.error), 5000);
+            message.delete().catch(console.error);
+            return;
+        }
+
+        const lastCodeMessageId = config.lastCodeEmbeds[serverId][channelId];
+        if (lastCodeMessageId) {
+            try {
+                const oldEmbedMessage = await message.channel.messages.fetch(lastCodeMessageId);
+                if (oldEmbedMessage) await oldEmbedMessage.delete();
+            } catch (err) {
+                if (err.code !== 10008) {
+                    console.error('Failed to delete previous embed message:', err);
+                }
             }
-
-            message.delete(); // Delete the command message after processing
         }
-    } catch (error) {
-        console.error('Error executing command:', error);
+
+        const codeEmbed = new MessageEmbed()
+            .setColor('#0099ff')
+            .setTitle(`${message.author.username}'s Union Circle`)
+            .setDescription(`The current Union Circle code is: \`${code}\`\n<@&${pingRoleId}>`)
+            .setImage(customImageUrl)
+            .setFooter({ text: '© 2022 - 2024 Pokémon Legends', iconURL: footerIconUrl });
+
+        // Send ping and delete it after 2 seconds
+        const roleMentionMessage = await message.channel.send(`<@&${pingRoleId}>`);
+        setTimeout(() => roleMentionMessage.delete().catch(console.error), 1000);
+        
+        const sentMessage = await message.channel.send({ embeds: [codeEmbed] });
+
+        config.lastCodeEmbeds[serverId][channelId] = sentMessage.id;
+        saveConfig();
+
+        message.delete().catch(console.error);
+    };
+
+    if (command === 'offline') {
+        await processOfflineCommand();
+    } else if (command === 'online') {
+        await processOnlineCommand();
+    } else if (command === 'help') {
+        await processHelpCommand();
+    } else if (command === 'code') {
+        await processCodeCommand();
     }
 });
 
-async function fetchStickyMessage(channelID, channel) {
-    try {
-        const [rows] = await db.query('SELECT message_content, embed_color, embed_image, title FROM sticky_messages WHERE channel_id = ? LIMIT 1', [channelID]);
-        if (rows.length > 0) {
-            const { message_content, embed_color = '#0099ff', embed_image, title = 'Professor Turo' } = rows[0];
-
-            // Ensure the title is a string
-            const embedTitle = typeof title === 'string' ? title : 'Professor Turo';
-
-            const embed = new MessageEmbed()
-                .setColor(embed_color)
-                .setTitle(embedTitle)
-                .setDescription(message_content)
-                .setThumbnail(embed_image)
-                .setFooter(embedFooter);
-
-            if (lastStickyMessageID.has(channelID)) {
-                const previousStickyMessageID = lastStickyMessageID.get(channelID);
-                try {
-                    const previousStickyMessage = await channel.messages.fetch(previousStickyMessageID);
-                    if (previousStickyMessage && previousStickyMessage.author.bot) {
-                        await previousStickyMessage.delete();
-                    }
-                } catch (fetchError) {
-                    //console.warn(`Warning: Unable to fetch or delete previous sticky message: ${fetchError.message}`);
-                    // If the message fetch fails, remove it from the map
-                    lastStickyMessageID.delete(channelID);
-                }
-            }
-
-            const newStickyMessage = await channel.send({ embeds: [embed] });
-            lastStickyMessageID.set(channelID, newStickyMessage.id);
-            saveLastStickyMessageID(channelID, newStickyMessage.id);
-        }
-    } catch (error) {
-        console.error('Error fetching sticky message:', error);
-    }
-}
-
-function saveLastStickyMessageID(channelID, messageID) {
-    let lastPostData = {};
-    try {
-        lastPostData = JSON.parse(fs.readFileSync(lastPostFilePath, 'utf-8'));
-    } catch (error) {
-        console.error('Error reading LastPost.json during save:', error);
-    }
-    lastPostData[channelID] = messageID;
-    fs.writeFileSync(lastPostFilePath, JSON.stringify(lastPostData, null, 2));
-}
-
-
-async function handleSetColorCommand(message, args) {
-    const color = args[0];
-    const channelID = message.channel.id;
-
-    if (!message.member.roles.cache.some(role => allowedRoles.includes(role.id))) {
-        return message.reply('You do not have permission to use this command.');
-    }
-
-    try {
-        await db.execute('UPDATE sticky_messages SET embed_color = ? WHERE channel_id = ?', [color, channelID]);
-        message.channel.send('Embed color updated successfully!');
-    } catch (error) {
-        console.error('Error updating embed color:', error);
-        message.channel.send('There was an error updating the embed color.');
-    }
-}
-
-async function handleSetImageCommand(message, args) {
-    const imageURL = args[0];
-    const channelID = message.channel.id;
-
-    if (!message.member.roles.cache.some(role => allowedRoles.includes(role.id))) {
-        return message.reply('You do not have permission to use this command.');
-    }
-
-    try {
-        await db.execute('UPDATE sticky_messages SET embed_image = ? WHERE channel_id = ?', [imageURL, channelID]);
-        message.channel.send('Embed image updated successfully!');
-    } catch (error) {
-        console.error('Error updating embed image:', error);
-        message.channel.send('There was an error updating the embed image.');
-    }
-}
-
-async function handleSetTitleCommand(message, args) {
-    const newTitle = args.join(' ');
-    const channelID = message.channel.id;
-
-    if (!message.member.roles.cache.some(role => allowedRoles.includes(role.id))) {
-        return message.reply('You do not have permission to use this command.');
-    }
-
-    try {
-        await db.execute('UPDATE sticky_messages SET title = ? WHERE channel_id = ?', [newTitle, channelID]);
-        message.channel.send('Sticky message title updated successfully!');
-    } catch (error) {
-        console.error('Error updating sticky message title:', error);
-        message.channel.send('There was an error updating the sticky message title.');
-    }
-}
-
-async function handleStickCommand(message, args) {
-    const stickyMessage = args.join(' ');
-    const channelID = message.channel.id;
-
-    if (!message.member.roles.cache.some(role => allowedRoles.includes(role.id))) {
-        return message.reply('You do not have permission to use this command.');
-    }
-
-    try {
-        await db.execute('INSERT INTO sticky_messages (channel_id, message_content) VALUES (?, ?) ON DUPLICATE KEY UPDATE message_content = ?', [channelID, stickyMessage, stickyMessage]);
-        message.channel.send('Sticky message updated successfully!');
-    } catch (error) {
-        console.error('Error updating sticky message:', error);
-        message.channel.send('There was an error updating the sticky message.');
-    }
-}
-
-async function handleUnstickCommand(message) {
-    const channelID = message.channel.id;
-
-    if (!message.member.roles.cache.some(role => allowedRoles.includes(role.id))) {
-        return message.reply('You do not have permission to use this command.');
-    }
-
-    try {
-        await db.execute('DELETE FROM sticky_messages WHERE channel_id = ?', [channelID]);
-        message.channel.send('Sticky message removed successfully!');
-    } catch (error) {
-        console.error('Error removing sticky message:', error);
-        message.channel.send('There was an error removing the sticky message.');
-    }
-}
-
-function sendHelpMessage(message) {
-    const embed = new MessageEmbed()
-        .setColor('#0099ff')
-        .setTitle('Sticky Bot Commands')
-        .setDescription('Here are the available commands:')
-        .addFields(
-            { name: '!setcolor <color>', value: 'Set the embed color for sticky messages.' },
-            { name: '!setimage <imageURL>', value: 'Set the embed image for sticky messages.' },
-            { name: '!settitle <title>', value: 'Set the title for sticky messages.' },
-            { name: '!stick <message>', value: 'Stick a message to the channel.' },
-            { name: '!unstick', value: 'Unstick the current sticky message.' }
-        )
-        .setFooter(embedFooter);
-
-    message.channel.send({ embeds: [embed] });
-}
-
-client.login(process.env.DISCORD_TOKEN);
+client.login(process.env.BOT_TOKEN);
