@@ -1,102 +1,108 @@
-# Pokémon Legends Sticky Bot
+# Sticky Message Bot
 
-A highly customizable Discord bot designed for the Pokémon Legends community. This bot ensures important messages remain visible in your Discord channels by periodically reposting them as sticky messages.
+This Discord bot automatically manages sticky messages in your server's channels, ensuring that important information is always visible to your members. The bot allows users with specific roles to set, update, and remove sticky messages, as well as customize the appearance of these messages using commands.
 
 ## Features
 
-- **Sticky Messages:** Ensure important messages stay at the bottom of the channel.
-- **Customizable Embeds:** Set the color, image, title, and content of sticky messages.
-- **Permission Management:** Restrict command access based on user roles.
-- **Clean Chat:** Automatically delete command messages after processing to maintain a clean chat environment.
-- **Persistent Storage:** Maintain the last sticky message ID to ensure proper cleanup on bot restart.
+- Sticky messages that persist at the top of the channel
+- Customizable embed color, image, and title
+- Role-based permissions for command usage
+- Commands for setting, updating, and removing sticky messages
+- Help command to list all available commands
 
-## Getting Started
+## Prerequisites
 
-### Prerequisites
+Before running the bot, ensure you have the following:
 
-- [Node.js](https://nodejs.org/) (v16.6.0 or higher)
-- [npm](https://www.npmjs.com/) (v7.20.0 or higher)
-- MySQL database
+- Node.js installed
+- A Discord bot token
+- MySQL database set up
 
-### Installation
+## Installation
 
-1. **Clone the Repository:**
+1. Clone the repository:
 
-    ```bash
-    git clone https://github.com/yourusername/pokemon-legends-sticky-bot.git
-    cd pokemon-legends-sticky-bot
-    ```
+   ```bash
+   git clone <repository_url>
+   cd <repository_directory>
+   ```
 
-2. **Install Dependencies:**
+2. Install dependencies:
 
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
 
-3. **Setup MySQL Database:**
+3. Set up environment variables:
 
-    Update the MySQL database connection details in the `index.js` file:
+   Create a `.env` file in the root directory and add your Discord bot token and MySQL database URI:
 
-    ```javascript
-    const db = createPool({
-        host: 'your-database-host',
-        user: 'your-database-user',
-        password: 'your-database-password',
-        database: 'your-database-name',
-    });
-    ```
+   ```
+   DISCORD_TOKEN=your_discord_bot_token
+   DB_URI=your_mysql_database_uri
+   ```
 
-4. **Create `LastPost.json`:**
+4. Set up the database:
 
-    Create a `LastPost.json` file in the root directory:
+   Ensure your MySQL database has a table named `sticky_messages` with the following schema:
 
-    ```json
-    {}
-    ```
+   ```sql
+   CREATE TABLE sticky_messages (
+       channel_id VARCHAR(255) PRIMARY KEY,
+       message_content TEXT,
+       embed_color VARCHAR(7) DEFAULT '#0099ff',
+       embed_image VARCHAR(255),
+       title VARCHAR(255) DEFAULT 'Professor Turo'
+   );
+   ```
 
-### Running the Bot
+5. Start the bot:
 
-Start the bot using the following command:
+   ```bash
+   node index.js
+   ```
 
-```bash
-node index.js
+## Usage
+
+The bot uses the command prefix `!`. The following commands are available:
+
+- `!help`: Displays a list of available commands.
+- `!setcolor <color>`: Sets the embed color for sticky messages (requires appropriate role).
+- `!setimage <imageURL>`: Sets the embed image for sticky messages (requires appropriate role).
+- `!settitle <title>`: Sets the title for sticky messages (requires appropriate role).
+- `!stick <message>`: Sticks a message to the channel (requires appropriate role).
+- `!unstick`: Unsticks the current sticky message (requires appropriate role).
+
+### Role-Based Permissions
+
+Ensure the roles that are allowed to use the commands are set in the `allowedRoles` array in the code:
+
+```js
+const allowedRoles = ['Role ID 1', 'Role ID 2', 'Role ID 3'];
 ```
 
-## Commands
+Replace the role IDs with the actual IDs of the roles in your server.
 
-- `!help` - Display the available commands.
-- `!setcolor <color>` - Set the embed color for sticky messages.
-- `!setimage <imageURL>` - Set the embed image for sticky messages.
-- `!settitle <title>` - Set the title for sticky messages.
-- `!stick <message>` - Stick a message to the channel.
-- `!unstick` - Unstick the current sticky message.
+## Configuration
 
-### Permissions
+- **Command Prefix**: Change the command prefix by modifying the `PREFIX` variable in the code.
+- **Embed Footer**: Customize the footer of the embed messages by editing the `embedFooter` object in the code.
 
-Commands are restricted to users with specific roles. Update the `allowedRoles` array in `index.js` with the role IDs that are allowed to use the commands:
+## Troubleshooting
 
-```javascript
-const allowedRoles = ['role-id-1', 'role-id-2', 'role-id-3'];
-```
-
-## Contributing
-
-We welcome contributions to enhance the Pokémon Legends Sticky Bot. To contribute:
-
-1. **Fork the repository.**
-2. **Create a new branch:** `git checkout -b feature-branch`.
-3. **Make your changes.**
-4. **Commit your changes:** `git commit -am 'Add new feature'`.
-5. **Push to the branch:** `git push origin feature-branch`.
-6. **Create a new Pull Request.**
+- If the bot doesn't respond to commands, check the console for any errors.
+- Ensure that the bot has the necessary permissions to read messages and send messages in the channels.
+- Verify that the `.env` file is correctly set up with your Discord token and database URI.
+- Check the `LastPost.json` file for any errors during the read/write operations.
 
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
+## Contributing
+
+Feel free to open issues or submit pull requests for improvements and bug fixes.
+
 ---
 
-<p align="center">
-  <img src="https://i.imgur.com/NyAz7sw.png" alt="Pokémon Legends" width="150"/>
-</p>
-```
+Enjoy using the Sticky Message Bot! If you have any questions or need further assistance, please reach out.
